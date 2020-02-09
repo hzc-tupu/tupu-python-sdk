@@ -122,3 +122,25 @@ class TUPU:
             response_json['verify_result'] = self.__verify(response_json['signature'], response_json['json'])
             response_json['json'] = json.loads(response_json['json'])
         return response_json
+
+    def video_async_api(self, video, callbackUrl, interval=1, realTimeCallback=False):
+        if not video:
+            raise Exception('video is required')
+        if not callbackUrl:
+            raise Exception('callbackUrl is required')
+        self.__sign()
+        request_data = {
+            "timestamp": self.__timestamp,
+            "nonce": self.__nonce,
+            "signature": self.__signature,
+            "video": video,
+            "callbackUrl": callbackUrl,
+            "interval": interval,
+            "realTimeCallback": realTimeCallback
+        }
+        response = requests.post(self.__video_async_url, json=request_data)
+        response_json = json.loads(response.text)
+        if not "error" in response_json:
+            response_json['verify_result'] = self.__verify(response_json['signature'], response_json['json'])
+            response_json['json'] = json.loads(response_json['json'])
+        return response_json
