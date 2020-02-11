@@ -47,6 +47,8 @@ class TUPU:
         self.__url = url + ('' if url.endswith('/') else '/') + secret_id
         self.__video_sync_url = url + ('' if url.endswith('/') else '/') + 'video/syncscan/' + secret_id
         self.__video_async_url = url + ('' if url.endswith('/') else '/') + 'video/asyncscan/' + secret_id
+        self.__video_stream_url = url + ('' if url.endswith('/') else '/') + 'video/stream/' + secret_id
+        self.__video_close_url = url + ('' if url.endswith('/') else '/') + 'video/close/' + secret_id
         self.__secret_id = secret_id
         # get private key
         with open(private_key_path) as private_key_file:
@@ -56,7 +58,7 @@ class TUPU:
 
     def __sign(self):
         """get the signature"""
-        self.__timestamp = time.time()
+        self.__timestamp = int(time.time())
         self.__nonce = random.randint(1 << 4, 1 << 32)
         sign_string = "%s,%s,%s" % (self.__secret_id, self.__timestamp, self.__nonce)
         self.__signature = base64.b64encode(rsa.sign(sign_string.encode("utf-8"), self.__private_key, 'SHA-256')).decode('utf-8')
@@ -97,7 +99,7 @@ class TUPU:
             response_json['json'] = json.loads(response_json['json'])
         return response_json
 
-    def video_sync_api(self, video, is_url=False, interval=1, maxFrames=200):
+    def video_sync_api(self, video, is_url=False, interval=1, maxFrames=200, tag=''):
         if not video:
             raise Exception('video is required')
         self.__sign()
@@ -108,6 +110,8 @@ class TUPU:
             "interval": interval,
             "maxFrames": maxFrames
         }
+        if tag:
+            request_data["tag"] = tag
         response = None
         if is_url:
             files = {'video': (None, video)}
@@ -123,7 +127,7 @@ class TUPU:
             response_json['json'] = json.loads(response_json['json'])
         return response_json
 
-    def video_async_api(self, video, callbackUrl, interval=1, realTimeCallback=False):
+    def video_async_api(self, video, callbackUrl, interval=1, realTimeCallback=False, audio=False, customInfo={}, callbackRules={}):
         if not video:
             raise Exception('video is required')
         if not callbackUrl:
@@ -138,7 +142,55 @@ class TUPU:
             "interval": interval,
             "realTimeCallback": realTimeCallback
         }
+        if audio:
+            request_data["audio"] = audio
+        if customInfo:
+            request_data["customInfo"] = customInfo
+        if callbackRules:
+            request_data["callbackRules"] = callbackRules
         response = requests.post(self.__video_async_url, json=request_data)
+        response_json = json.loads(response.text)
+        if not "error" in response_json:
+            response_json['verify_result'] = self.__verify(response_json['signature'], response_json['json'])
+            response_json['json'] = json.loads(response_json['json'])
+        return response_json
+
+    def video_stream_api(self, video, callbackUrl, interval=1, customInfo={}, callbackRules={}):
+        if not video:
+            raise Exception('video is required')
+        if not callbackUrl:
+            raise Exception('callbackUrl is required')
+        self.__sign()
+        request_data = {
+            "timestamp": self.__timestamp,
+            "nonce": self.__nonce,
+            "signature": self.__signature,
+            "video": video,
+            "callbackUrl": callbackUrl,
+            "interval": interval
+        }
+        if customInfo:
+            request_data["customInfo"] = customInfo
+        if callbackRules:
+            request_data["callbackRules"] = callbackRules
+        response = requests.post(self.__video_stream_url, json=request_data)
+        response_json = json.loads(response.text)
+        if not "error" in response_json:
+            response_json['verify_result'] = self.__verify(response_json['signature'], response_json['json'])
+            response_json['json'] = json.loads(response_json['json'])
+        return response_json
+
+    def video_close_api(self, videoId):
+        if not videoId:
+            raise Exception('videoId is required')
+        self.__sign()
+        request_data = {
+            "timestamp": self.__timestamp,
+            "nonce": self.__nonce,
+            "signature": self.__signature,
+            "videoId": videoId
+        }
+        response = requests.post(self.__video_close_url, json=request_data)
         response_json = json.loads(response.text)
         if not "error" in response_json:
             response_json['verify_result'] = self.__verify(response_json['signature'], response_json['json'])
