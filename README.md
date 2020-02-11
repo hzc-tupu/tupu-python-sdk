@@ -2,7 +2,7 @@
 
 SDK for TUPU visual recognition service
 ######
-<https://www.tuputech.com> 
+<https://www.tuputech.com>
 
 ## Install Dependencies
 ```
@@ -35,4 +35,61 @@ images = ["/home/user/001.zip", "/home/user/002.zip"]
 result = tupu.api(images=images, is_url=False)
 
 print result["verify_result"]
+```
+
+## Video API
+
+#### 1. Video Sync API
+```python
+tupu.video_sync_api(video [, is_url, interval, maxFrames, tag])
+```
+detail specification can be found [here.](http://cloud.doc.tuputech.com/API/video/syncscan/)
+
+example:
+```python
+# video url
+video = 'http://example.com/video.mp4'
+result = tupu.video_sync_api(video=video, is_url=True)
+
+# video file
+video = '/home/user/video.mp4'
+result = tupu.video_sync_api(video=video, is_url=False)
+```
+
+#### 2. Video Async API
+```python
+tupu.tupu.video_async_api(video, callbackUrl [, interval, realTimeCallback, audio, customInfo, callbackRules])
+```
+detail specification can be found [here.](http://cloud.doc.tuputech.com/API/video/asyncscan/#1)
+
+example:
+```python
+video = 'http://example.com/video.mp4'
+callbackUrl = 'http://example.com/callback'
+result = tupu.video_async_api(video=video, callbackUrl=callbackUrl)
+```
+
+#### 3. Video Stream API
+```python
+tupu.tupu.video_stream_api(video, callbackUrl [, interval, customInfo, callbackRules])
+```
+detail specification can be found [here.](http://cloud.doc.tuputech.com/API/video/asyncscan/#2)
+
+example:
+```python
+video = 'rtmp://example.com/stream'
+callbackUrl = 'http://example.com/callback'
+result = tupu.video_stream_api(video=video, callbackUrl=callbackUrl)
+```
+
+#### 4. Video Close API
+```python
+tupu.tupu.video_close_api(videoId)
+```
+detail specification can be found [here.](http://cloud.doc.tuputech.com/API/video/asyncscan/#3)
+
+example:
+```python
+videoId = '5e425c8a3d69826ad7a77036'
+result = tupu.video_close_api(videoId=videoId)
 ```
