@@ -69,7 +69,7 @@ class TUPU:
             rsa.verify(verify_string.encode("utf-8"), base64.b64decode(signature), self.__public_key)
             return "Success"
         except rsa.pkcs1.VerificationError:
-            print ("Verification Failed")
+            print("Verification Failed")
         return "Failed"
 
     def api(self, images, is_url=False):
@@ -89,7 +89,7 @@ class TUPU:
             multiple_files = []
             for image_file in images:
                 if not os.path.isfile(image_file):
-                    print ('[SKIP FILE] No such file "%s"' % image_file)
+                    print('[SKIP FILE] No such file "%s"' % image_file)
                     continue
                 multiple_files.append(('image', (image_file, open(image_file, 'rb'), 'application/*')))
             response = requests.post(self.__url, data=request_data, files=multiple_files)
